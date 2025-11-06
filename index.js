@@ -99,7 +99,10 @@ app.post("/api/assets", upload.single("assetData"), async (req, res) => {
   // Forward to Immich
   const form = new FormData();
   form.append("assetData", buffer, { filename: req.file.originalname, contentType: req.file.mimetype });
-  for (const [key, value] of Object.entries(req.body)) form.append(key, value);
+  for (const [key, value] of Object.entries(req.body)) {
+ 	console.log(` | Added "${key}" to body form`);
+  	form.append(key, value);
+  }
 
   try {
     const resp = await fetch(`${IMMICH_URL}/api/assets`, {
