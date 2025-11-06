@@ -1,0 +1,11 @@
+my-domain.tld {
+    # Compress/resize uploads
+    @uploads {
+        method POST
+        path /api/assets
+    }
+    reverse_proxy @uploads resizer:3000
+
+    # Everything else goes to Immich backend
+    reverse_proxy {$BACKEND_HOST}:{$BACKEND_PORT}
+}
