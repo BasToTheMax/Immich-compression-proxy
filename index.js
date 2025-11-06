@@ -26,7 +26,8 @@ async function verifyAuth(req) {
       headers: req.headers
     });
     return resp.ok;
-  } catch {
+  } catch(err) {
+  	console.error(`> Failed to check auth!`, err);
     return false;
   }
 }
