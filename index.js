@@ -96,9 +96,11 @@ app.post("/api/assets", upload.single("assetData"), async (req, res) => {
     return res.status(500).send("Failed to process file");
   }
 
+  console.log(` |  Uploading a ${typeof buffer} image to immich....`);
+
   // Forward to Immich
   const form = new FormData();
-  form.append("assetData", buffer, { filename: req.file.originalname, contentType: req.file.mimetype });
+  form.append("assetData", buffer, { filename: req.file.originalname, contentType: 'image/webp' });
   for (const [key, value] of Object.entries(req.body)) {
  	console.log(` | Added "${key}" to body form`);
   	form.append(key, value);
@@ -118,8 +120,8 @@ app.post("/api/assets", upload.single("assetData"), async (req, res) => {
 
     console.log(` | Asset uploaded!`);
   } catch (err) {
-    console.error("Forwarding error:", err);
-    res.status(502).send("Failed to contact Immich");
+    console.error("> Forwarding error:", err);
+    res.status(502).type('txt').send("Failed to contact Immich");
   }
 });
 
