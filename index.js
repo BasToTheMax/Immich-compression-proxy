@@ -39,7 +39,6 @@ app.post("/api/assets", upload.single("assetData"), async (req, res) => {
   let hasResponsed = false;
   
   if (!req.file) return res.status(400).send("No file uploaded");
-  console.log(req.file);
   const filename = req.file.originalname;
   const ext = path.extname(filename).replace('.', '');
   let buffer = req.file.buffer;
@@ -104,9 +103,7 @@ app.post("/api/assets", upload.single("assetData"), async (req, res) => {
   try {
     const resp = await fetch(`${IMMICH_URL}/api/assets`, {
       method: "POST",
-      headers: {
-      	cookie: req.headers.cookie || ""
-      },
+      headers: req.headers,
       body: form,
     });
 
