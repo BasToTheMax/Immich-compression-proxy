@@ -1,8 +1,8 @@
 import express from "express";
 import multer from "multer";
 import sharp from "sharp";
-import fetch from "node-fetch";
-import FormData from "form-data";
+import fetch, { FormData, File } from "node-fetch";
+// import FormData from "form-data";
 import { spawn } from "child_process";
 import fs from "fs";
 import path from "path";
@@ -74,15 +74,14 @@ app.post("/api/assets", upload.single("assetData"), async (req, res) => {
         console.log(` | Resized image to ${SIZE_H}p`);
       }
       
-      // Re-encode to webp if different format
-      const shouldReencode = meta.format !== "webp";
 
-      if (shouldReencode) {
-        buffer = await image.webp({ quality: 100, effort: 6, preset: "photo" }).toBuffer();
-        console.log(' | Re-encoded image to webp');
-      } else {
-      	console.log(' | Image is already webp!');
-        buffer = await image.toBuffer();
+      image = await image.webp({ quality: 100, effort: 6, preset: "photo" });
+      console.log(' | Re-encoded image to webp');
+
+      buffer = await image.toBuffer();
+      console.log(` | Type of buffer: ${typeof buffer}`);
+      if (typeof buffer !== 'buffer') {
+       	console.log(buffer);
       }
 
     } else {
@@ -100,16 +99,29 @@ app.post("/api/assets", upload.single("assetData"), async (req, res) => {
 
   // Forward to Immich
   const form = new FormData();
-  form.append("assetData", buffer, { filename: req.file.originalname, contentType: 'image/webp' });
+  const newFIle = new File([buffer], `image-${Date.now()}.webp`, { type: 'image/webp'});
+  form.set("assetData", newFIle, `image-${Date.now()}.webp`);
   for (const [key, value] of Object.entries(req.body)) {
  	console.log(` | Added "${key}" to body form`);
-  	form.append(key, value);
+  	form.set(key, value);
   }
+
+  let headers = {};
+  let headerKeys = ['cookie', 'x-api-key', 'x-immich-user-token', 'x-immich-sesion-token', 'x-immich-share-key', 'x-immich-share-slug'];
+  headers['Accept'] = '*/*';
+  for(let headerKey of headerKeys) {
+  	if (req.headers[headerKey]) {
+  		headers[headerKey] = req.headers[headerKey];
+  	}
+  }
+  // headers['Content-Type'] = form.getHeaders()['content-type'];
+
+  console.log(` | Using headers:`, headers);
 
   try {
     const resp = await fetch(`${IMMICH_URL}/api/assets`, {
       method: "POST",
-      headers: req.headers,
+      headers: headers,
       body: form,
     });
 
